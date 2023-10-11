@@ -23,14 +23,16 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public void purchaseTickets(final Long accountId, final TicketTypeRequest... ticketTypeRequests)
             throws InvalidPurchaseException {
-        final Map<TicketTypeRequest.Type, Integer> ticketTypeCounts = validatePurchase(accountId, ticketTypeRequests);
-        reserveSeats(accountId, ticketTypeCounts);
-        makePayment(accountId, ticketTypeCounts);
+        final Map<TicketTypeRequest.Type, Integer> ticketRequestsMapped = validateAndMapTicketRequests(accountId,
+                ticketTypeRequests);
+        callSeatReserveService(accountId, ticketRequestsMapped);
+        callPaymentService(accountId, ticketRequestsMapped);
     }
 
-    private void reserveSeats(final Long accountId, final Map<TicketTypeRequest.Type, Integer> ticketTypeCounts)
+    private void callSeatReserveService(final Long accountId,
+            final Map<TicketTypeRequest.Type, Integer> ticketRequestsMapped)
             throws InvalidPurchaseException {
-        final int totalSeatstoAllocate = ticketTypeCounts.entrySet().stream()
+        final int totalSeatstoAllocate = ticketRequestsMapped.entrySet().stream()
                 .filter(entry -> entry.getKey() == TicketTypeRequest.Type.ADULT
                         || entry.getKey() == TicketTypeRequest.Type.CHILD)
                 .mapToInt(Map.Entry::getValue)
@@ -38,17 +40,19 @@ public class TicketServiceImpl implements TicketService {
         seatReservationService.reserveSeat(accountId, totalSeatstoAllocate);
     }
 
-    private void makePayment(final Long accountId, final Map<TicketTypeRequest.Type, Integer> ticketTypeCounts)
+    private void callPaymentService(final Long accountId,
+            final Map<TicketTypeRequest.Type, Integer> ticketRequestsMapped)
             throws InvalidPurchaseException {
         final AtomicInteger totalAmountToPay = new AtomicInteger(0);
-        ticketTypeCounts.entrySet().stream()
+        ticketRequestsMapped.entrySet().stream()
                 .filter(entry -> TicketTypePrices.getPrice(entry.getKey()) != 0)
                 .forEach(entry -> totalAmountToPay
                         .addAndGet(TicketTypePrices.getPrice(entry.getKey()) * entry.getValue()));
         ticketPaymentService.makePayment(accountId, totalAmountToPay.get());
     }
 
-    private Map<Type, Integer> validatePurchase(final Long accountId, final TicketTypeRequest... ticketTypeRequests)
+    private Map<Type, Integer> validateAndMapTicketRequests(final Long accountId,
+            final TicketTypeRequest... ticketTypeRequests)
             throws InvalidPurchaseException {
         final List<String> exceptionMessages = new ArrayList<>();
         if (accountId == null || accountId <= 0) {
