@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "cinema-tickets-python"
+		},
+		{
+			"path": "cinema-tickets-javascript"
+		},
+		{
+			"path": "cinema-tickets-java"
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "interactive"
+	}
+}
