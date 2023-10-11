@@ -29,8 +29,8 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: 
-        cd cinema-tickets-java
-        mvn -B package --file pom.xml
+        cd cinema-tickets-java \
+        mvn -B package --file pom.xml \
         mvn test
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
